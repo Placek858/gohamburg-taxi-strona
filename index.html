@@ -10,45 +10,73 @@
         body { font-family: 'Inter', sans-serif; background: #0f0f0f; color: white; margin: 0; }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .gold-text { color: #fcd200; }
-        .gold-btn { background: #fcd200; color: black; transition: 0.3s; font-weight: bold; }
-        .gold-btn:hover { background: #e0bb00; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(252, 210, 0, 0.3); }
+        .gold-btn { background: #fcd200; color: black; transition: 0.3s; font-weight: bold; position: relative; overflow: hidden; }
+        .gold-btn:hover:not(:disabled) { background: #e0bb00; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(252, 210, 0, 0.3); }
+        .gold-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        /* Animacja kółka */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.3);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
     <div class="glass p-8 rounded-2xl w-full max-w-md shadow-2xl">
-        <h1 class="text-3xl font-bold mb-2 text-center text-white">GoHamburg <span class="gold-text">Taxi</span></h1>
-        <p class="text-gray-400 text-sm text-center mb-8 uppercase tracking-widest">Panel Zamówień Online</p>
+        <h1 class="text-3xl font-bold mb-2 text-center">GoHamburg <span class="gold-text">Taxi</span></h1>
+        <p class="text-gray-400 text-sm text-center mb-8 uppercase tracking-widest text-[10px]">Panel Zamówień Online</p>
 
         <form id="taxiForm" class="space-y-4">
             <div>
-                <label class="block text-xs text-gray-500 mb-1 ml-1">LOKALIZACJA</label>
-                <input type="text" id="loc" required placeholder="Gdzie jesteś?" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500">
+                <label class="block text-xs text-gray-500 mb-1 ml-1 uppercase">Lokalizacja</label>
+                <input type="text" id="loc" required placeholder="Gdzie jesteś?" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500 transition-all">
             </div>
             <div>
-                <label class="block text-xs text-gray-500 mb-1 ml-1">CEL PODRÓŻY</label>
-                <input type="text" id="dest" required placeholder="Dokąd jedziemy?" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500">
+                <label class="block text-xs text-gray-500 mb-1 ml-1 uppercase">Cel podróży</label>
+                <input type="text" id="dest" required placeholder="Dokąd jedziemy?" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500 transition-all">
             </div>
             <div>
-                <label class="block text-xs text-gray-500 mb-1 ml-1">KATEGORIA</label>
-                <select id="cat" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500">
+                <label class="block text-xs text-gray-500 mb-1 ml-1 uppercase">Kategoria</label>
+                <select id="cat" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500 transition-all">
                     <option value="basic">Basic TAXI</option>
                     <option value="green">Green TAXI</option>
                     <option value="premium">Premium TAXI</option>
                     <option value="classic">Classic TAXI</option>
                 </select>
             </div>
-            <button type="submit" id="btn" class="w-full gold-btn py-4 rounded-xl mt-4 uppercase">Wyślij zamówienie</button>
+            
+            <button type="submit" id="btn" class="w-full gold-btn py-4 rounded-xl mt-4 uppercase flex items-center justify-center min-h-[56px]">
+                <span id="btnText">Wyślij zamówienie</span>
+                <div id="loader" class="spinner"></div>
+            </button>
         </form>
+
+        <div id="statusMsg" class="mt-4 text-center text-sm font-semibold hidden animate-bounce"></div>
     </div>
 
     <script>
-        const WEBHOOK_URL = "TWÓJ_LINK_DO_WEBHOOKA"; // TUTAJ WKLEJ LINK Z DISCORDA
+        // PAMIĘTAJ: WKLEJ TUTAJ SWÓJ LINK WEBHOOK!
+        const WEBHOOK_URL = "TUTAJ_WKLEJ_SWOJ_WEBHOOK_Z_DISCORDA";
 
         document.getElementById('taxiForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn');
-            btn.innerText = "WYSYŁANIE...";
+            const btnText = document.getElementById('btnText');
+            const loader = document.getElementById('loader');
+            const statusMsg = document.getElementById('statusMsg');
+
+            // Start ładowania
             btn.disabled = true;
+            btnText.classList.add('hidden');
+            loader.style.display = 'block';
+            statusMsg.classList.add('hidden');
 
             const payload = {
                 embeds: [{
@@ -64,18 +92,29 @@
             };
 
             try {
-                await fetch(WEBHOOK_URL, {
+                const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                alert("Sukces! Zamówienie wysłane.");
+
+                if(response.ok) {
+                    statusMsg.innerText = "✅ Zamówienie wysłane pomyślnie!";
+                    statusMsg.className = "mt-4 text-center text-sm font-semibold text-green-400 block animate-pulse";
+                    document.getElementById('taxiForm').reset();
+                } else {
+                    throw new Error();
+                }
             } catch (err) {
-                alert("Błąd połączenia z Discordem.");
+                statusMsg.innerText = "❌ Coś poszło nie tak. Spróbuj ponownie.";
+                statusMsg.className = "mt-4 text-center text-sm font-semibold text-red-400 block";
             } finally {
-                btn.innerText = "Wyślij zamówienie";
-                btn.disabled = false;
-                document.getElementById('taxiForm').reset();
+                // Koniec ładowania
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    loader.style.display = 'none';
+                }, 500); // Małe opóźnienie dla lepszego efektu wizualnego
             }
         });
     </script>
