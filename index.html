@@ -59,11 +59,11 @@
             </button>
         </form>
 
-        <div id="statusMessage" class="mt-6 font-semibold hidden transition-all"></div>
+        <div id="statusMessage" class="mt-6 font-semibold hidden"></div>
     </div>
 
     <script>
-        // TUTAJ WKLEJ SWÓJ LINK WEBHOOK Z DISCORDA
+        // PAMIĘTAJ O WKLEJENIU SWOJEGO LINKU!
         const WEBHOOK_URL = "TWÓJ_WEBHOOK_TUTAJ";
 
         document.getElementById('taxiForm').addEventListener('submit', async (e) => {
@@ -74,7 +74,7 @@
             const loader = document.getElementById('btnLoader');
             const statusMsg = document.getElementById('statusMessage');
 
-            // 1. Włącz ładowanie (kółko)
+            // 1. Start ładowania
             btn.disabled = true;
             btnText.classList.add('hidden');
             loader.style.display = 'block';
@@ -94,16 +94,19 @@
             };
 
             try {
+                // Najpierw wysyłamy do Discorda (dzieje się to w tle)
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                // 2. Wyświetl komunikat na stronie (ZAMIAST ALERTU)
+                // 2. SZTUCZNE OPÓŹNIENIE (4 sekundy kręcenia kółkiem)
+                await new Promise(resolve => setTimeout(resolve, 4000));
+
                 if (response.ok) {
                     statusMsg.innerText = "✅ Zamówienie wysłane pomyślnie!";
-                    statusMsg.className = "mt-6 font-semibold text-green-400 block";
+                    statusMsg.className = "mt-6 font-semibold text-green-400 block animate-pulse";
                     document.getElementById('taxiForm').reset();
                 } else {
                     throw new Error();
@@ -112,7 +115,7 @@
                 statusMsg.innerText = "❌ Błąd wysyłania. Spróbuj ponownie.";
                 statusMsg.className = "mt-6 font-semibold text-red-400 block";
             } finally {
-                // 3. Przywróć przycisk
+                // 3. Przywracamy przycisk i chowamy kółko
                 btn.disabled = false;
                 btnText.classList.remove('hidden');
                 loader.style.display = 'none';
