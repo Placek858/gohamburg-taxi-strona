@@ -10,11 +10,10 @@
         body { font-family: 'Inter', sans-serif; background: #0f0f0f; color: white; margin: 0; }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .gold-text { color: #fcd200; }
-        .gold-btn { background: #fcd200; color: black; transition: 0.3s; font-weight: bold; display: flex; align-items: center; justify-content: center; min-height: 56px; }
-        .gold-btn:hover:not(:disabled) { background: #e0bb00; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(252, 210, 0, 0.3); }
-        .gold-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .gold-btn { background: #fcd200; color: black; transition: 0.3s; font-weight: bold; display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; border-radius: 12px; }
+        .gold-btn:hover:not(:disabled) { background: #e0bb00; transform: translateY(-2px); }
+        .gold-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        /* Animacja kółka (Spinner) */
         .loader {
             border: 3px solid rgba(0, 0, 0, 0.1);
             border-top: 3px solid #000;
@@ -25,7 +24,6 @@
             display: none;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         .hidden { display: none; }
     </style>
 </head>
@@ -37,15 +35,15 @@
         <form id="taxiForm" class="space-y-4 text-left">
             <div>
                 <label class="block text-xs text-gray-500 mb-1 ml-1 uppercase">Lokalizacja</label>
-                <input type="text" id="loc" required placeholder="Gdzie jesteś?" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500 transition-all">
+                <input type="text" id="loc" required placeholder="Gdzie jesteś?" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500">
             </div>
             <div>
                 <label class="block text-xs text-gray-500 mb-1 ml-1 uppercase">Cel podróży</label>
-                <input type="text" id="dest" required placeholder="Dokąd jedziemy?" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500 transition-all">
+                <input type="text" id="dest" required placeholder="Dokąd jedziemy?" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500">
             </div>
             <div>
                 <label class="block text-xs text-gray-500 mb-1 ml-1 uppercase">Kategoria</label>
-                <select id="cat" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500 transition-all">
+                <select id="cat" class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-yellow-500">
                     <option value="basic">Basic TAXI</option>
                     <option value="green">Green TAXI</option>
                     <option value="premium">Premium TAXI</option>
@@ -53,36 +51,36 @@
                 </select>
             </div>
             
-            <button type="submit" id="submitBtn" class="w-full gold-btn py-4 rounded-xl mt-4 uppercase">
+            <button type="submit" id="submitBtn" class="gold-btn mt-6">
                 <span id="btnText">Wyślij zamówienie</span>
                 <div id="btnLoader" class="loader"></div>
             </button>
         </form>
 
-        <div id="statusMessage" class="mt-6 font-semibold hidden"></div>
+        <div id="statusMsg" class="mt-6 font-semibold hidden"></div>
     </div>
 
     <script>
-        // PAMIĘTAJ O WKLEJENIU SWOJEGO LINKU!
+        // TUTAJ WKLEJ LINK WEBHOOK
         const WEBHOOK_URL = "https://discord.com/api/webhooks/1467994359474421872/cQyGcpu1enfL3YqxtxkZTFSbqOckLyt6q2CEyQo5mVv-ULf230fK9izPcOfuBiOlqwlA";
 
-        document.getElementById('taxiForm').addEventListener('submit', async (e) => {
+        document.getElementById('taxiForm').onsubmit = async function(e) {
             e.preventDefault();
             
             const btn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
             const loader = document.getElementById('btnLoader');
-            const statusMsg = document.getElementById('statusMessage');
+            const status = document.getElementById('statusMsg');
 
-            // 1. Start ładowania
+            // 1. Start animacji
             btn.disabled = true;
             btnText.classList.add('hidden');
             loader.style.display = 'block';
-            statusMsg.classList.add('hidden');
+            status.classList.add('hidden');
 
             const payload = {
                 embeds: [{
-                    title: "🚕 Nowe zamówienie ze strony WWW",
+                    title: "🚕 NOWE ZLECENIE",
                     color: 16568832,
                     fields: [
                         { name: "📍 Start", value: document.getElementById('loc').value },
@@ -94,33 +92,33 @@
             };
 
             try {
-                // Najpierw wysyłamy do Discorda (dzieje się to w tle)
+                // Najpierw wysyłamy (bez czekania na kółko)
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                // 2. SZTUCZNE OPÓŹNIENIE (4 sekundy kręcenia kółkiem)
-                await new Promise(resolve => setTimeout(resolve, 4000));
+                // 2. SZTUCZNE OPÓŹNIENIE (np. 5 sekund kręcenia)
+                await new Promise(r => setTimeout(r, 5000));
 
                 if (response.ok) {
-                    statusMsg.innerText = "✅ Zamówienie wysłane pomyślnie!";
-                    statusMsg.className = "mt-6 font-semibold text-green-400 block animate-pulse";
-                    document.getElementById('taxiForm').reset();
+                    status.innerText = "✅ Zlecenie przyjęte! Czekaj na kierowcę.";
+                    status.className = "mt-6 font-semibold text-green-400 block animate-pulse";
+                    this.reset();
                 } else {
                     throw new Error();
                 }
             } catch (err) {
-                statusMsg.innerText = "❌ Błąd wysyłania. Spróbuj ponownie.";
-                statusMsg.className = "mt-6 font-semibold text-red-400 block";
+                status.innerText = "❌ Błąd systemu. Spróbuj za chwilę.";
+                status.className = "mt-6 font-semibold text-red-400 block";
             } finally {
-                // 3. Przywracamy przycisk i chowamy kółko
+                // 3. Koniec ładowania
                 btn.disabled = false;
                 btnText.classList.remove('hidden');
                 loader.style.display = 'none';
             }
-        });
+        };
     </script>
 </body>
 </html>
