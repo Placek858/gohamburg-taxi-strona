@@ -1,29 +1,69 @@
-const sendOrder = async (orderData) => {
-    // PODMIEŃ NA IP SWOJEGO SERWERA WISPBYTE
-    const B_SERVER_URL = 'http://217.154.173.102:12103/api/order';
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>GoHamburg Taxi - Zamówienie</title>
+    <style>
+        body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
+        .form { max-width: 300px; display: flex; flex-direction: column; gap: 10px; }
+        input, select, button { padding: 10px; border-radius: 5px; border: none; }
+        button { background: #fcd200; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>🚕 Zamów Taxi</h2>
+    <div class="form">
+        <input type="text" id="discord_id" placeholder="Twoje Discord ID (same cyfry)">
+        <input type="text" id="loc" placeholder="Lokalizacja (Skąd)">
+        <input type="text" id="dest" placeholder="Cel (Dokąd)">
+        <select id="cat">
+            <option value="basic">Basic TAXI</option>
+            <option value="green">Green TAXI</option>
+            <option value="premium">Premium TAXI</option>
+            <option value="classic">Classic TAXI</option>
+        </select>
+        <button onclick="zamow()">Wyślij zlecenie</button>
+    </div>
 
-    try {
-        const response = await fetch(B_SERVER_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                userId: orderData.discordId,    // Musisz mieć pole na Discord ID klienta
-                lokalizacja: orderData.loc,
-                cel: orderData.dest,
-                kategoria: orderData.cat       // np. 'basic', 'green' itd.
-            })
-        });
+    <script>
+        const sendOrder = async (orderData) => {
+            const B_SERVER_URL = 'http://217.154.173.102:12103/api/order'; 
 
-        const result = await response.json();
-        if (result.success) {
-            alert('Zlecenie zostało wysłane do bota! ID kursu: ' + result.courseId);
-        } else {
-            alert('Wystąpił błąd podczas wysyłania zamówienia.');
+            try {
+                const response = await fetch(B_SERVER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: orderData.discordId,
+                        lokalizacja: orderData.loc,
+                        cel: orderData.dest,
+                        kategoria: orderData.cat
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('Sukces! ID kursu: ' + result.courseId);
+                } else {
+                    alert('Błąd bota: ' + (result.error || 'Nieznany'));
+                }
+            } catch (error) {
+                console.error('Błąd połączenia:', error);
+                alert('Nie udało się połączyć z botem. Upewnij się, że używasz http:// a nie https:// w przeglądarce!');
+            }
+        };
+
+        function zamow() {
+            const data = {
+                discordId: document.getElementById('discord_id').value,
+                loc: document.getElementById('loc').value,
+                dest: document.getElementById('dest').value,
+                cat: document.getElementById('cat').value
+            };
+
+            if(!data.discordId || !data.loc) return alert('Wypełnij pola!');
+            sendOrder(data);
         }
-    } catch (error) {
-        console.error('Błąd połączenia z botem:', error);
-        alert('Nie udało się połączyć z systemem bota. Sprawdź czy bot na WispByte jest włączony.');
-    }
-};
+    </script>
+</body>
+</html>
