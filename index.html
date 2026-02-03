@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoHamburg Taxi - Serwis Premium</title>
     <style>
-        /* Tło - klimatyczny Hamburg */
+        /* Stylistyka tła i ogólny wygląd */
         body {
             margin: 0;
             font-family: 'Poppins', sans-serif;
@@ -24,7 +24,7 @@
         .hero h1 { font-size: 3.5rem; margin-bottom: 0.5rem; color: #fcd200; text-shadow: 2px 2px 15px rgba(0,0,0,0.5); }
         .hero p { font-size: 1.3rem; margin-bottom: 2rem; opacity: 0.9; }
 
-        /* Przyciski */
+        /* Przyciski główne */
         .btn-group { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
         .btn {
             padding: 18px 35px;
@@ -42,7 +42,7 @@
         .btn-info { background: rgba(255,255,255,0.1); color: #fff; border: 2px solid #fff; backdrop-filter: blur(5px); }
         .btn-info:hover { background: rgba(255,255,255,0.2); transform: translateY(-3px); }
 
-        /* Formularz */
+        /* Formularz zamówienia */
         #order-form-container {
             display: none;
             background: rgba(20, 20, 20, 0.95);
@@ -93,7 +93,7 @@
     <div id="order-form-container">
         <h2 style="color:#fcd200; margin-top:0;">Złóż zamówienie</h2>
         <div class="inputs">
-            <input type="text" id="discord_id" placeholder="Twoje Discord ID (np. misiu#1234)">
+            <input type="text" id="discord_id" placeholder="Twoje Discord ID">
             <input type="text" id="loc" placeholder="Miejsce odbioru">
             <input type="text" id="dest" placeholder="Miejsce docelowe">
             <select id="cat">
@@ -102,11 +102,12 @@
                 <option value="van">Van (6 osób)</option>
             </select>
             <button class="submit-btn" onclick="wyslijZlecenie()">POTWIERDŹ ZAMÓWIENIE</button>
-            <p onclick="showForm()" style="cursor:pointer; font-size: 0.9rem; color: #888;">Powrót</p>
+            <p onclick="showForm()" style="cursor:pointer; font-size: 0.9rem; color: #888; margin-top: 15px;">Powrót</p>
         </div>
     </div>
 
     <script>
+        // Funkcja przełączania widoku formularza
         function showForm() {
             const form = document.getElementById('order-form-container');
             const hero = document.querySelector('.hero');
@@ -119,6 +120,7 @@
             }
         }
 
+        // Wysyłanie zlecenia do Twojego bota
         async function wyslijZlecenie() {
             const data = {
                 discordId: document.getElementById('discord_id').value,
@@ -132,7 +134,6 @@
                 return;
             }
 
-            // TUTAJ PODPINASZ SWÓJ ADRES BOTA
             const B_SERVER_URL = 'http://217.154.173.102:12103/api/order';
 
             try {
@@ -143,7 +144,7 @@
                 });
                 alert("Zlecenie wysłane! Sprawdź Discorda.");
             } catch (e) {
-                alert("Błąd połączenia. Pamiętaj o odblokowaniu 'Niezabezpieczonej treści' w przeglądarce!");
+                alert("Błąd połączenia. Sprawdź, czy odblokowałeś niezabezpieczoną treść w przeglądarce.");
             }
         }
     </script>
