@@ -2,68 +2,124 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>GoHamburg Taxi - Zamówienie</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoHamburg Taxi - Serwis Premium</title>
     <style>
-        body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
-        .form { max-width: 300px; display: flex; flex-direction: column; gap: 10px; }
-        input, select, button { padding: 10px; border-radius: 5px; border: none; }
-        button { background: #fcd200; font-weight: bold; cursor: pointer; }
+        /* Tło - klimatyczny Hamburg */
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                        url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=1920') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .hero h1 { font-size: 3.5rem; margin-bottom: 0.5rem; color: #fcd200; text-shadow: 2px 2px 15px rgba(0,0,0,0.5); }
+        .hero p { font-size: 1.3rem; margin-bottom: 2rem; opacity: 0.9; }
+
+        /* Przyciski */
+        .btn-group { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            padding: 18px 35px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        .btn-order { background: #fcd200; color: #111; box-shadow: 0 4px 15px rgba(252, 210, 0, 0.3); }
+        .btn-order:hover { background: #fff; transform: translateY(-3px); }
+        
+        .btn-info { background: rgba(255,255,255,0.1); color: #fff; border: 2px solid #fff; backdrop-filter: blur(5px); }
+        .btn-info:hover { background: rgba(255,255,255,0.2); transform: translateY(-3px); }
+
+        /* Formularz */
+        #order-form-container {
+            display: none;
+            background: rgba(20, 20, 20, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #fcd200;
+            margin-top: 30px;
+            width: 90%;
+            max-width: 450px;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .inputs { display: flex; flex-direction: column; gap: 15px; }
+        input, select { 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 1px solid #333; 
+            background: #222; 
+            color: white; 
+            font-size: 1rem;
+        }
+
+        .submit-btn { 
+            background: #fcd200; 
+            color: black; 
+            padding: 18px; 
+            border: none; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <h2>🚕 Zamów Taxi</h2>
-    <div class="form">
-        <input type="text" id="discord_id" placeholder="Twoje Discord ID (same cyfry)">
-        <input type="text" id="loc" placeholder="Lokalizacja (Skąd)">
-        <input type="text" id="dest" placeholder="Cel (Dokąd)">
-        <select id="cat">
-            <option value="basic">Basic TAXI</option>
-            <option value="green">Green TAXI</option>
-            <option value="premium">Premium TAXI</option>
-            <option value="classic">Classic TAXI</option>
-        </select>
-        <button onclick="zamow()">Wyślij zlecenie</button>
+
+    <div class="hero">
+        <h1>🚕 GoHamburg Taxi</h1>
+        <p>Twoja bezpieczna podróż zaczyna się tutaj.</p>
+        <div class="btn-group">
+            <button class="btn btn-order" onclick="showForm()">Zamów Przejazd</button>
+            <button class="btn btn-info" onclick="Tawk_API.maximize()">Pomoc Live</button>
+        </div>
+    </div>
+
+    <div id="order-form-container">
+        <h2 style="color:#fcd200; margin-top:0;">Złóż zamówienie</h2>
+        <div class="inputs">
+            <input type="text" id="discord_id" placeholder="Twoje Discord ID (np. misiu#1234)">
+            <input type="text" id="loc" placeholder="Miejsce odbioru">
+            <input type="text" id="dest" placeholder="Miejsce docelowe">
+            <select id="cat">
+                <option value="basic">Standard (Eco)</option>
+                <option value="premium">Premium (Black)</option>
+                <option value="van">Van (6 osób)</option>
+            </select>
+            <button class="submit-btn" onclick="wyslijZlecenie()">POTWIERDŹ ZAMÓWIENIE</button>
+            <p onclick="showForm()" style="cursor:pointer; font-size: 0.9rem; color: #888;">Powrót</p>
+        </div>
     </div>
 
     <script>
-        const sendOrder = async (orderData) => {
-            // USUNIĘTO PROXY - TERAZ ŁĄCZYMY SIĘ BEZPOŚREDNIO Z BOTEM
-            const B_SERVER_URL = 'http://217.154.173.102:12103/api/order';
-
-            try {
-                const response = await fetch(B_SERVER_URL, {
-                    method: 'POST',
-                    mode: 'cors', // Wymuszamy tryb CORS
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        userId: orderData.discordId,
-                        lokalizacja: orderData.loc,
-                        cel: orderData.dest,
-                        kategoria: orderData.cat
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Serwer bota zwrócił błąd: ' + response.status);
-                }
-
-                const result = await response.json();
-                if (result.success) {
-                    alert('Sukces! Zlecenie wysłane do bota. ID: ' + result.courseId);
-                } else {
-                    alert('Błąd bota: ' + (result.error || 'Nieznany'));
-                }
-            } catch (error) {
-                console.error('Błąd połączenia:', error);
-                // Komunikat o Mixed Content i potrzebie zezwolenia na połączenie
-                alert('Błąd połączenia! \n\n1. Kliknij w kłódkę przy pasku adresu. \n2. Wybierz "Ustawienia witryny". \n3. Znajdź "Niezabezpieczona treść" i zmień na "Zezwalaj". \n4. Odśwież stronę.');
+        function showForm() {
+            const form = document.getElementById('order-form-container');
+            const hero = document.querySelector('.hero');
+            if (form.style.display === 'block') {
+                form.style.display = 'none';
+                hero.style.display = 'block';
+            } else {
+                form.style.display = 'block';
+                hero.style.display = 'none';
             }
-        };
+        }
 
-        function zamow() {
+        async function wyslijZlecenie() {
             const data = {
                 discordId: document.getElementById('discord_id').value,
                 loc: document.getElementById('loc').value,
@@ -72,16 +128,36 @@
             };
 
             if(!data.discordId || !data.loc || !data.dest) {
-                return alert('Proszę wypełnić wszystkie pola!');
-            }
-            
-            // Sprawdzenie czy ID składa się z samych cyfr
-            if(!/^\d+$/.test(data.discordId)) {
-                return alert('Discord ID musi zawierać tylko cyfry!');
+                alert("Misiu, wypełnij wszystkie pola!");
+                return;
             }
 
-            sendOrder(data);
+            // TUTAJ PODPINASZ SWÓJ ADRES BOTA
+            const B_SERVER_URL = 'http://217.154.173.102:12103/api/order';
+
+            try {
+                const response = await fetch(B_SERVER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                alert("Zlecenie wysłane! Sprawdź Discorda.");
+            } catch (e) {
+                alert("Błąd połączenia. Pamiętaj o odblokowaniu 'Niezabezpieczonej treści' w przeglądarce!");
+            }
         }
+    </script>
+
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/6981b1b237a4fd1c39dc5163/1jgh9s8b9';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
     </script>
 </body>
 </html>
