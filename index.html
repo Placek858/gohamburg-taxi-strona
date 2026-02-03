@@ -27,13 +27,17 @@
 
     <script>
         const sendOrder = async (orderData) => {
-// Dodajemy 'https://corsproxy.io/?' przed Twoim adresem IP
-const B_SERVER_URL = 'https://corsproxy.io/?http://217.154.173.102:12103/api/order';
+            // USUNIĘTO PROXY - TERAZ ŁĄCZYMY SIĘ BEZPOŚREDNIO Z BOTEM
+            const B_SERVER_URL = 'http://217.154.173.102:12103/api/order';
 
             try {
                 const response = await fetch(B_SERVER_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors', // Wymuszamy tryb CORS
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         userId: orderData.discordId,
                         lokalizacja: orderData.loc,
@@ -42,15 +46,20 @@ const B_SERVER_URL = 'https://corsproxy.io/?http://217.154.173.102:12103/api/ord
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error('Serwer bota zwrócił błąd: ' + response.status);
+                }
+
                 const result = await response.json();
                 if (result.success) {
-                    alert('Sukces! ID kursu: ' + result.courseId);
+                    alert('Sukces! Zlecenie wysłane do bota. ID: ' + result.courseId);
                 } else {
                     alert('Błąd bota: ' + (result.error || 'Nieznany'));
                 }
             } catch (error) {
                 console.error('Błąd połączenia:', error);
-                alert('Nie udało się połączyć z botem. Upewnij się, że używasz http:// a nie https:// w przeglądarce!');
+                // Komunikat o Mixed Content i potrzebie zezwolenia na połączenie
+                alert('Błąd połączenia! \n\n1. Kliknij w kłódkę przy pasku adresu. \n2. Wybierz "Ustawienia witryny". \n3. Znajdź "Niezabezpieczona treść" i zmień na "Zezwalaj". \n4. Odśwież stronę.');
             }
         };
 
@@ -62,7 +71,15 @@ const B_SERVER_URL = 'https://corsproxy.io/?http://217.154.173.102:12103/api/ord
                 cat: document.getElementById('cat').value
             };
 
-            if(!data.discordId || !data.loc) return alert('Wypełnij pola!');
+            if(!data.discordId || !data.loc || !data.dest) {
+                return alert('Proszę wypełnić wszystkie pola!');
+            }
+            
+            // Sprawdzenie czy ID składa się z samych cyfr
+            if(!/^\d+$/.test(data.discordId)) {
+                return alert('Discord ID musi zawierać tylko cyfry!');
+            }
+
             sendOrder(data);
         }
     </script>
